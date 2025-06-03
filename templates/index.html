@@ -3,28 +3,47 @@
 <head>
     <meta charset="utf-8">
     <title>Correctivos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .task { border: 1px solid #ccc; padding: 10px; margin: 5px; cursor: move; }
-        .team { border: 1px dashed #aaa; padding: 10px; min-height: 50px; }
+        body { background-color: #f8f9fa; }
+        .task { cursor: move; }
+        .team {
+            min-height: 100px;
+            border: 2px dashed #6c757d;
+            padding: 10px;
+            border-radius: 0.5rem;
+        }
+        .team.dragover { background-color: #e2e6ea; }
     </style>
 </head>
-<body>
-<h1>Correctivos por sede</h1>
+<body class="container py-4">
+<h1 class="mb-4 text-center">Correctivos por sede</h1>
+<div class="row">
 {% for site, tasks in sites.items() %}
-    <h2>{{ site }}</h2>
-    <div>
-        {% for t in tasks %}
-        <div class="task" draggable="true" data-id="{{ loop.index0 }}">
-            {{ t.subject }} - asignado a: {{ t.assigned_to or 'Sin asignar' }}
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">{{ site }}</div>
+            <ul class="list-group list-group-flush">
+                {% for t in tasks %}
+                <li class="list-group-item task" draggable="true" data-id="{{ loop.index0 }}">
+                    <strong>{{ t.subject }}</strong>
+                    <div class="text-muted small">Asignado a: {{ t.assigned_to or 'Sin asignar' }}</div>
+                </li>
+                {% endfor %}
+            </ul>
         </div>
-        {% endfor %}
     </div>
 {% endfor %}
+</div>
 
-<h2>Equipos de trabajo</h2>
-<div id="teams">
-    <div class="team" data-name="Equipo A">Equipo A</div>
-    <div class="team" data-name="Equipo B">Equipo B</div>
+<h2 class="mt-5">Equipos de trabajo</h2>
+<div class="row" id="teams">
+    <div class="col-md-6 mb-3">
+        <div class="team text-center" data-name="Equipo A">Equipo A</div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="team text-center" data-name="Equipo B">Equipo B</div>
+    </div>
 </div>
 
 <script>
@@ -35,10 +54,20 @@ document.querySelectorAll('.task').forEach(el => {
 });
 
 document.querySelectorAll('.team').forEach(team => {
-    team.addEventListener('dragover', ev => ev.preventDefault());
+    team.addEventListener('dragover', ev => {
+        ev.preventDefault();
+        team.classList.add('dragover');
+    });
+    team.addEventListener('dragleave', () => team.classList.remove('dragover'));
     team.addEventListener('drop', ev => {
+        ev.preventDefault();
+        team.classList.remove('dragover');
         const id = ev.dataTransfer.getData('text/plain');
-        fetch('/assign', {method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: `task_id=${id}&team=${team.dataset.name}`}).then(() => window.location.reload());
+        fetch('/assign', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `task_id=${id}&team=${team.dataset.name}`
+        }).then(() => window.location.reload());
     });
 });
 </script>
