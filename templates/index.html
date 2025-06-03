@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Correctivos</title>
+    <style>
+        .task { border: 1px solid #ccc; padding: 10px; margin: 5px; cursor: move; }
+        .team { border: 1px dashed #aaa; padding: 10px; min-height: 50px; }
+    </style>
+</head>
+<body>
+<h1>Correctivos por sede</h1>
+{% for site, tasks in sites.items() %}
+    <h2>{{ site }}</h2>
+    <div>
+        {% for t in tasks %}
+        <div class="task" draggable="true" data-id="{{ loop.index0 }}">
+            {{ t.subject }} - asignado a: {{ t.assigned_to or 'Sin asignar' }}
+        </div>
+        {% endfor %}
+    </div>
+{% endfor %}
+
+<h2>Equipos de trabajo</h2>
+<div id="teams">
+    <div class="team" data-name="Equipo A">Equipo A</div>
+    <div class="team" data-name="Equipo B">Equipo B</div>
+</div>
+
+<script>
+document.querySelectorAll('.task').forEach(el => {
+    el.addEventListener('dragstart', ev => {
+        ev.dataTransfer.setData('text/plain', el.dataset.id);
+    });
+});
+
+document.querySelectorAll('.team').forEach(team => {
+    team.addEventListener('dragover', ev => ev.preventDefault());
+    team.addEventListener('drop', ev => {
+        const id = ev.dataTransfer.getData('text/plain');
+        fetch('/assign', {method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: `task_id=${id}&team=${team.dataset.name}`}).then(() => window.location.reload());
+    });
+});
+</script>
+</body>
+</html>
